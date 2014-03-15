@@ -1,0 +1,5 @@
+# file: generic-users/tasks/users.yml
+
+- name: generic-users | Make sure users are present
+  user: name={{item.name}} groups={{",".join(item.groups)}}{% if item.append is defined %} append={{item.append}}{% endif %}{% if item.pass is defined %} password={{item.pass}}{% endif %}{% if item.comment is defined %} comment={{item.comment}}{% endif %}{% if item.shell is defined %} shell={{item.shell}}{% endif %}{% if item.uid is defined %} uid={{item.uid}}{% endif %}{% if item.home is defined %} home={{item.home}}{% endif %}{% if item.system is defined %} system={{item.system}}{% endif %} state=present
+  with_items: genericusers_add_users

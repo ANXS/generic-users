@@ -1,0 +1,3 @@
+# file: generic-users/tasks/main.yml
+
+- include: users.yml
