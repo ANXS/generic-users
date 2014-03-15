@@ -1,10 +1,7 @@
 # file: generic-users/defaults/main.yml
 
-genericusers_add_groups: []
+genericusers_groups: []
+genericusers_users: []
 
-genericusers_remove_groups: []
-
-genericusers_add_users: []
-
-genericusers_remove_users: []
-
+genericusers_groups_removed: []
+genericusers_users_removed: []
