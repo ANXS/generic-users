@@ -1,4 +1,4 @@
-## Ansibles - generic_users [![Build Status](https://travis-ci.org/Ansibles/generic_users.png)](https://travis-ci.org/Ansibles/generic_users)
+## Ansibles - generic-users [![Build Status](https://travis-ci.org/Ansibles/generic-users.png)](https://travis-ci.org/Ansibles/generic-users)
 
 Ansible role which manages the groups and user accounts.
 
@@ -45,4 +45,4 @@ Licensed under the MIT License. See the LICENSE file for details.
 
 #### Feedback, bug-reports, requests, ...
 
-Are [welcome](https://github.com/ansibles/generic_users/issues)!
+Are [welcome](https://github.com/ansibles/generic-users/issues)!
