@@ -17,7 +17,7 @@
   with_items: genericusers_users_removed
 
 - name: generic-users | Install the ssh keys for the users
-  authorized_key: "user={{item.0.name}} key='{{item.1}}'"
+  authorized_key: "user='{{item.0.name}}' key='{{item.1}}'"
   with_subelements:
     - genericusers_users
     - ssh_keys
