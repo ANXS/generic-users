@@ -12,7 +12,11 @@ Ansible role which manages the groups and user accounts.
 ```yaml
 genericusers_groups:
   - name: "dbadmins"
+    gid: 5000
+    system: no
   - name: "mailadmins"
+    gid: 6000
+    system: no
 
 genericusers_groups_removed:
   - name: "defunctadmins"
@@ -23,12 +27,12 @@ genericusers_users:
     ssh_keys:
       - "ssh-dss ......."
       - "ssh-dss ......."
-    append: "no"        # (optional) If yes, will only add groups, not set them to just the list in groups.
-    pass: "$6$...."     # (Optional) Set the user's password to this crypted value.
-    comment: "foo acc"  # (Optional)
-    shell: "/bin/bash"  # (Optional) Set the user's shell.
-    home: "/home/baz"   # (Optional) Set the user's home directory.
-    system: no          # (Optional) Make the user a system account or not.
+    append: "no"        # If yes, will only add groups, not set them to just the list in groups.
+    pass: "$6$...."     # Set the user's password to this crypted value.
+    comment: "foo acc"  # 
+    shell: "/bin/bash"  # Set the user's shell.
+    home: "/home/baz"   # Set the user's home directory.
+    system: no          # Make the user a system account or not.
   - name: "bar"
     groups: ["admin", "staff", "dev"]
     ssh_keys: []
