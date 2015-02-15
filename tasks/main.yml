@@ -2,19 +2,19 @@
 
 - name: generic-users | Make sure all groups are present
   group: name="{{item.name}}"{% if item.system is defined %} system="{{item.system}}"{% endif %}{% if item.gid is defined %} gid="{{item.gid}}"{% endif %} state=present
-  with_items: "{{ genericusers_groups }}"
+  with_items: genericusers_groups
 
 - name: generic-users | Make sure all removed groups are not present
   group: name="{{item.name}}" state=absent
-  with_items: "{{ genericusers_groups_removed }}"
+  with_items: genericusers_groups_removed
 
 - name: generic-users | Make sure the users are present
   user: name="{{item.name}}" groups="{{','.join(item.groups)}}"{% if item.append is defined %} append="{{item.append}}"{% endif %}{% if item.pass is defined %} password="{{item.pass}}"{% endif %}{% if item.comment is defined %} comment='"{{item.comment}}"'{% endif %}{% if item.shell is defined %} shell="{{item.shell}}"{% endif %}{% if item.uid is defined %} uid="{{item.uid}}"{% endif %}{% if item.home is defined %} home="{{item.home}}"{% endif %}{% if item.system is defined %} system="{{item.system}}"{% endif %} state=present
-  with_items: "{{ genericusers_users }}"
+  with_items: genericusers_users
 
 - name: generic-users | Make sure all removed groups are not present
   user: name="{{item.name}}" state=absent remove=yes
-  with_items: "{{ genericusers_users_removed }}"
+  with_items: genericusers_users_removed
 
 - name: generic-users | Install the ssh keys for the users
   authorized_key: "user='{{item.0.name}}' key='{{item.1}}'"
