@@ -4,7 +4,7 @@ Ansible role which manages the groups and user accounts.
 
 
 #### Requirements & Dependencies
-- Tested on Ansible 1.4 or higher.
+- Tested on Ansible 1.8 or higher.
 
 
 #### Variables
