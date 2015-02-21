@@ -12,8 +12,8 @@
   user: name="{{item.name}}" groups="{{','.join(item.groups)}}"{% if item.append is defined %} append="{{item.append}}"{% endif %}{% if item.pass is defined %} password="{{item.pass}}"{% endif %}{% if item.comment is defined %} comment='"{{item.comment}}"'{% endif %}{% if item.shell is defined %} shell="{{item.shell}}"{% endif %}{% if item.uid is defined %} uid="{{item.uid}}"{% endif %}{% if item.home is defined %} home="{{item.home}}"{% endif %}{% if item.system is defined %} system="{{item.system}}"{% endif %} state=present
   with_items: genericusers_users
 
-- name: generic-users | Make sure all removed groups are not present
   user: name="{{item.name}}" state=absent remove=yes
+- name: generic-users | Make sure all removed users are not present
   with_items: genericusers_users_removed
 
 - name: generic-users | Install the ssh keys for the users
