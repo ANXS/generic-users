@@ -4,7 +4,7 @@ Ansible role which manages the groups and user accounts.
 
 
 #### Requirements & Dependencies
-- Tested on Ansible 1.4 or higher.
+- Tested on Ansible 1.8 or higher.
 
 
 #### Variables
@@ -12,8 +12,8 @@ Ansible role which manages the groups and user accounts.
 ```yaml
 genericusers_groups:
   - name: "dbadmins"
-    gid: 5000
-    system: no
+    gid: 5000           # (Optional)
+    system: no          # (Optional)
   - name: "mailadmins"
     gid: 6000
     system: no
@@ -24,15 +24,15 @@ genericusers_groups_removed:
 genericusers_users:
   - name: "foo"
     groups: ["admin", "staff", "devops"]
-    ssh_keys:
+    ssh_keys:           # Keys to add to authorized_keys
       - "ssh-dss ......."
       - "ssh-dss ......."
-    append: "no"        # If yes, will only add groups, not set them to just the list in groups.
-    pass: "$6$...."     # Set the user's password to this crypted value.
-    comment: "foo acc"  # 
-    shell: "/bin/bash"  # Set the user's shell.
-    home: "/home/baz"   # Set the user's home directory.
-    system: no          # Make the user a system account or not.
+    append: "no"        # (Optional) If yes, will only add groups, not set them to just the list in groups.
+    pass: "$6$...."     # (Optional) Set the user's password to this crypted value.
+    comment: "foo acc"  # (Optional) 
+    shell: "/bin/bash"  # (Optional) Set the user's shell.
+    home: "/home/baz"   # (Optional) Set the user's home directory.
+    system: no          # (Optional) Make the user a system account or not.
   - name: "bar"
     groups: ["admin", "staff", "dev"]
     ssh_keys: []
