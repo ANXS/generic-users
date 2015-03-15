@@ -38,7 +38,7 @@
 - name: generic-users | Install the ssh keys for the users
   authorized_key:
     user: "{{item.0.name}}"
-    key: "{{item.1}}"
+    key: "{{ lookup('file', '../files/' + item.1) }}"
   with_subelements:
     - genericusers_users
     - ssh_keys
