@@ -29,7 +29,7 @@ genericusers_users:
       - "ssh-dss ......."
     append: "no"        # (Optional) If yes, will only add groups, not set them to just the list in groups.
     pass: "$6$...."     # (Optional) Set the user's password to this crypted value.
-    comment: "foo acc"  # (Optional) 
+    comment: "foo acc"  # (Optional)
     shell: "/bin/bash"  # (Optional) Set the user's shell.
     home: "/home/baz"   # (Optional) Set the user's home directory.
     system: no          # (Optional) Make the user a system account or not.
@@ -41,6 +41,10 @@ genericusers_users_removed:
   - name: baz
 ```
 
+#### Testing
+This project comes with a VagrantFile, this is a fast and easy way to test changes to the role, fire it up with `vagrant up`
+
+See [vagrant docs](https://docs.vagrantup.com/v2/) for getting setup with vagrant
 
 #### License
 
