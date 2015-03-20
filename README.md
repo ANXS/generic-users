@@ -24,9 +24,9 @@ genericusers_groups_removed:
 genericusers_users:
   - name: "foo"
     groups: ["admin", "staff", "devops"]
-    ssh_keys:           # Keys to add to authorized_keys
-      - "ssh-dss ......."
-      - "ssh-dss ......."
+    ssh_keys:           # Keys to add to authorized_keys. Store them in the files directory.
+      - "id_rsa.pub"
+      - "id_rsa.pub"
     append: "no"        # (Optional) If yes, will only add groups, not set them to just the list in groups.
     pass: "$6$...."     # (Optional) Set the user's password to this crypted value.
     comment: "foo acc"  # (Optional)
