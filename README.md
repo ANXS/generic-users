@@ -41,10 +41,12 @@ genericusers_users_removed:
   - name: baz
 ```
 
+
 #### Testing
 This project comes with a VagrantFile, this is a fast and easy way to test changes to the role, fire it up with `vagrant up`
 
 See [vagrant docs](https://docs.vagrantup.com/v2/) for getting setup with vagrant
+
 
 #### License
 
