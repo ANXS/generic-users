@@ -8,12 +8,6 @@
     state: present
   with_items: genericusers_groups
 
-- name: generic-users | Make sure all removed groups are not present
-  group:
-    name: "{{ item.name }}"
-    state: absent
-  with_items: genericusers_groups_removed
-
 - name: generic-users | Make sure the users are present
   user:
     name: "{{ item.name }}"
@@ -28,13 +22,6 @@
     state: present
   with_items: genericusers_users
 
-- name: generic-users | Make sure all removed users are not present
-  user:
-    name: "{{item.name}}"
-    state: absent
-    remove: yes
-  with_items: genericusers_users_removed
-
 - name: generic-users | Install the ssh keys for the users
   authorized_key:
     user: "{{item.0.name}}"
@@ -42,3 +29,16 @@
   with_subelements:
     - genericusers_users
     - ssh_keys
+
+- name: generic-users | Make sure all removed users are not present
+  user:
+    name: "{{item.name}}"
+    state: absent
+    remove: yes
+  with_items: genericusers_users_removed
+
+- name: generic-users | Make sure all removed groups are not present
+  group:
+    name: "{{ item.name }}"
+    state: absent
+  with_items: genericusers_groups_removed
