@@ -11,6 +11,9 @@ Vagrant.configure('2') do |config|
       ansible.sudo = true
       ansible.inventory_path = 'vagrant-inventory'
       ansible.host_key_checking = false
+      ansible.extra_vars = {
+        users_dir: "#{File.dirname(__FILE__)}/fixtures"
+      }
     end
   end
 end
