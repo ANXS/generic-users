@@ -1,5 +1,12 @@
 - hosts: all
-  vars_files:
-    - 'defaults/main.yml'
+  vars:
+    genericusers_groups: []
+    genericusers_groups_removed: []
   tasks:
+    - name: "generate users"
+      local_action:
+        module: users_from_yaml
+        users_dir: "{{users_dir}}"
+        contexts: test
+      become: no
     - include: 'tasks/main.yml'

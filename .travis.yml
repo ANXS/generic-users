@@ -9,9 +9,9 @@ install:
 script:
   - echo localhost > inventory
   - ansible-playbook -i inventory test.yml --syntax-check
-  - ansible-playbook -i inventory test.yml --connection=local --sudo
+  - ansible-playbook -i inventory test.yml --connection=local --sudo -e users_dir=fixtures
   - >
-    ansible-playbook -i inventory test.yml --connection=local --sudo
+    ansible-playbook -i inventory test.yml --connection=local --sudo -e users_dir=fixtures
     | grep -q 'changed=0.*failed=0'
     && (echo 'Idempotence test: pass' && exit 0)
     || (echo 'Idempotence test: fail' && exit 1)
