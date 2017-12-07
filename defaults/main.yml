@@ -5,3 +5,5 @@ genericusers_users: []
 
 genericusers_groups_removed: []
 genericusers_users_removed: []
+
+genericusers_global_public_key: false

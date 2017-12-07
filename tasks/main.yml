@@ -33,6 +33,30 @@
     - "{{ genericusers_users }}"
     - ssh_keys
 
+- name: generic-users | Create global ssh directory
+  file:
+    path: "/etc/ssh/{{item.name}}"
+    state: "directory"
+    owner: "root"
+    group: "root"
+    mode: "0600"
+  with_items: "{{genericusers_users}}"
+  when: genericusers_global_public_key
+  no_log: true
+
+- name: generic-users | Install global ssh keys for the users
+  lineinfile:
+    dest: "/etc/ssh/{{item.0.name}}/authorized_keys"
+    line: "{{item.1}}"
+    owner: "root"
+    group: "root"
+    mode: "0600"
+  no_log: true
+  when: genericusers_global_public_key
+  with_subelements:
+  - "{{genericusers_users}}"
+  - ssh_keys
+
 - name: generic-users | Make sure all removed users are not present
   user:
     name: "{{item.name}}"
