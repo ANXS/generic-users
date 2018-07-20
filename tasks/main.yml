@@ -13,7 +13,7 @@
   user:
     name: "{{ item.name }}"
     group: "{{ item.group | default(omit) }}"
-    groups: "{{ ','.join(item.groups) }}"
+    groups: "{{ item.groups | join(',') if item.groups is defined else omit }}"
     append: "{{ item.append | default(omit) }}"
     password: "{{ item.pass | default(omit) }}"
     comment: "{{ item.comment | default(omit) }}"
