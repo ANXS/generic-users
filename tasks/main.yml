@@ -12,6 +12,7 @@
 - name: generic-users | Make sure the users are present
   user:
     name: "{{ item.name }}"
+    group: "{{ item.group | default(omit) }}"
     groups: "{{ ','.join(item.groups) }}"
     append: "{{ item.append | default(omit) }}"
     password: "{{ item.pass | default(omit) }}"
