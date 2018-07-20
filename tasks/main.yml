@@ -1,6 +1,6 @@
 # file: generic-users/tasks/main.yml
 
-- name: generic-users | Make sure all groups are present
+- name: Make sure all groups are present
   group:
     name: "{{ item.name }}"
     system: "{{ item.system | default(omit) }}"
@@ -9,7 +9,7 @@
   no_log: true
   with_items: "{{ genericusers_groups }}"
 
-- name: generic-users | Make sure the users are present
+- name: Make sure the users are present
   user:
     name: "{{ item.name }}"
     group: "{{ item.group | default(omit) }}"
@@ -25,7 +25,7 @@
   no_log: true
   with_items: '{{ genericusers_users }}'
 
-- name: generic-users | Install the ssh keys for the users
+- name: Install the ssh keys for the users
   authorized_key:
     user: "{{item.0.name}}"
     key: "{{item.1}}"
@@ -34,7 +34,7 @@
     - "{{ genericusers_users }}"
     - ssh_keys
 
-- name: generic-users | Make sure all removed users are not present
+- name: Make sure all removed users are not present
   user:
     name: "{{item.name}}"
     state: absent
@@ -42,7 +42,7 @@
   no_log: true
   with_items: "{{ genericusers_users_removed }}"
 
-- name: generic-users | Make sure all removed groups are not present
+- name: Make sure all removed groups are not present
   group:
     name: "{{ item.name }}"
     state: absent
