@@ -33,7 +33,8 @@
   with_subelements:
     - "{{ genericusers_users }}"
     - ssh_keys
-
+    - skip_missing: true
+    
 - name: Make sure all removed users are not present
   user:
     name: "{{item.name}}"
