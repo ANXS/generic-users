@@ -1,50 +1,61 @@
-# file: generic-users/tasks/main.yml
+---
+- name: "Fetch GitHub ssh keys for uesrs"
+  uri:
+    url: "https://api.github.com/users/{{item.github_user}}/keys"
+    return_content: true
+    body_format: "json"
+  with_items: "{{genericusers_users}}"
+  when: >
+    genericusers_github_keys and
+    item.github_user|default('') != ''
+  register: genericusers_all_keys
 
-- name: Make sure all groups are present
-  group:
-    name: "{{ item.name }}"
-    system: "{{ item.system | default(omit) }}"
-    gid: "{{ item.gid | default(omit) }}"
-    state: present
-  no_log: true
-  with_items: "{{ genericusers_groups }}"
+- name: "Execute sensitive actions"
+  no_log: not genericusers_debug
+  block:
+    - name: "Make sure all groups are present"
+      group:
+        name: "{{ item.name }}"
+        system: "{{ item.system | default(omit) }}"
+        gid: "{{ item.gid | default(omit) }}"
+        state: "present"
+      with_items: "{{ genericusers_groups }}"
 
-- name: Make sure the users are present
-  user:
-    name: "{{ item.name }}"
-    group: "{{ item.group | default(omit) }}"
-    groups: "{{ item.groups | join(',') if item.groups is defined else omit }}"
-    append: "{{ item.append | default(omit) }}"
-    password: "{{ item.pass | default(omit) }}"
-    comment: "{{ item.comment | default(omit) }}"
-    shell: "{{ item.shell | default(omit) }}"
-    uid: "{{ item.uid | default(omit) }}"
-    home: "{{ item.home | default(omit) }}"
-    system: "{{ item.system | default(omit) }}"
-    state: present
-  no_log: true
-  with_items: '{{ genericusers_users }}'
+    - name: "Make sure the users are present"
+      user:
+        name: "{{ item.name }}"
+        group: "{{ item.group | default(omit) }}"
+        groups: "{{ item.groups | join(',') if item.groups is defined else omit }}"
+        append: "{{ item.append | default(omit) }}"
+        password: "{{ item.pass | default(omit) }}"
+        comment: "{{ item.comment | default(omit) }}"
+        shell: "{{ item.shell | default(omit) }}"
+        uid: "{{ item.uid | default(omit) }}"
+        home: "{{ item.home | default(omit) }}"
+        system: "{{ item.system | default(omit) }}"
+        state: "present"
+      with_items: "{{ genericusers_users }}"
 
-- name: Install the ssh keys for the users
-  authorized_key:
-    user: "{{item.0.name}}"
-    key: "{{item.1}}"
-  no_log: true
-  with_subelements:
-    - "{{ genericusers_users }}"
-    - ssh_keys
+    - debug:
+        var: genericusers_all_keys
 
-- name: Make sure all removed users are not present
-  user:
-    name: "{{item.name}}"
-    state: absent
-    remove: yes
-  no_log: true
-  with_items: "{{ genericusers_users_removed }}"
+    - name: "Install ssh keys for users"
+      authorized_key:
+        user: "{{item.item.name}}"
+        key: "{{(item.item.ssh_keys + (item.json|default([])|map(attribute='key')|list))|join('\n')}}"
+        exclusive: "{{genericusers_ssh_exclusive}}"
+        comment: "{{genericusers_ssh_comment}}"
+      with_items: "{{genericusers_all_keys.results}}"
 
-- name: Make sure all removed groups are not present
-  group:
-    name: "{{ item.name }}"
-    state: absent
-  no_log: true
-  with_items: '{{ genericusers_groups_removed }}'
+    - name: "Make sure all removed users are not present"
+      user:
+        name: "{{item.name}}"
+        state: "absent"
+        remove: yes
+      with_items: "{{ genericusers_users_removed }}"
+
+    - name: "Make sure all removed groups are not present"
+      group:
+        name: "{{ item.name }}"
+        state: "absent"
+      with_items: '{{ genericusers_groups_removed }}'

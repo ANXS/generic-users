@@ -1,7 +1,15 @@
-# file: generic-users/defaults/main.yml
-
+---
 genericusers_groups: []
 genericusers_users: []
 
 genericusers_groups_removed: []
 genericusers_users_removed: []
+
+genericusers_github_keys: false
+
+# controls whether or not no_log is used
+genericusers_debug: false
+
+genericusers_ssh_exclusive: false
+
+genericusers_ssh_comment: "Managed by ANXS.generic-users"

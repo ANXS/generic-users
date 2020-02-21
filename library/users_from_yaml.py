@@ -72,6 +72,8 @@ def main():
                 user['comment'] = meta['comment']
             if 'groups' in meta:
                 user['groups'] = meta['groups']
+            if 'github_user' in meta:
+                user['github_user'] = meta['github_user']
 
         # read password if exists
         if 'password' in files:
