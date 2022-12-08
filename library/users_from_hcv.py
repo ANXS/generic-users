@@ -6,7 +6,12 @@ import hvac.exceptions
 
 def keys_from_vault(client, vault_path, user):
     actual_path = "%s/%s/authorized_keys" % (vault_path, user)
-    vault_resp = client.secrets.kv.v2.list_secrets(actual_path)
+    vault_resp = None
+    try:
+        vault_resp = client.secrets.kv.v2.list_secrets(actual_path)
+    except hvac.exceptions.InvalidPath:
+        return []
+
     if not vault_resp:
         raise Exception('unexpected vault response')
 
