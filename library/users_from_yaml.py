@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import os, yaml
 
+from yaml import Loader
+
 def problems(mod, msg):
     """Ansible module exist with an error."""
     return mod.exit_json(changed=False, failed=True, msg=msg)
@@ -63,7 +65,7 @@ def main():
         # groups and gecos from metadata yamls
         if 'meta.yml' in files:
             meta_h = open("%s/meta.yml" % dirname, 'r')
-            meta = yaml.load(meta_h)
+            meta = yaml.load(meta_h, Loader=Loader)
             meta_h.close()
             # if contexts exist, then check validity
             context = valid_context(with_contexts, meta)
