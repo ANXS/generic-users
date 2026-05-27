@@ -10,23 +10,47 @@ def problems(mod, msg):
 def valid_context(with_contexts, meta):
     """Determines if the user is in context."""
     context = False
-    if len(with_contexts) > 0 and 'contexts' in meta:
-        if 'all' in meta['contexts']:
+    raw = meta.get('contexts', '')
+    user_contexts = [c.strip() for c in raw.split(',')] if isinstance(raw, str) else raw
+    if len(with_contexts) > 0 and len(user_contexts) > 0:
+        if 'all' in user_contexts:
             context = True
         else:
-            for ctx in meta['contexts']:
-                if not context:
-                    if ctx in with_contexts:
-                        context = True
-    elif 'contexts' in meta and 'all' in meta['contexts']:
+            for ctx in user_contexts:
+                if ctx in with_contexts:
+                    context = True
+                    break
+    elif 'all' in user_contexts:
         context = True
 
     return context
+
+def parse_extra_fields(raw):
+    """Parse extra_fields string into list of (source, dest) tuples.
+
+    Format: comma-separated entries, each either 'source:dest' or 'source'
+    (where dest defaults to source). Example: 'web_password:web_pass,api_key'
+    """
+    if not raw:
+        return []
+    result = []
+    for entry in raw.split(','):
+        entry = entry.strip()
+        if not entry:
+            continue
+        if ':' in entry:
+            src, dest = entry.split(':', 1)
+            result.append((src.strip(), dest.strip()))
+        else:
+            result.append((entry, entry))
+    return result
+
 
 def main():
     mod = AnsibleModule(
         argument_spec=dict(
             contexts=dict(default=''),
+            extra_fields=dict(default=''),
             users_dir=dict()
         )
     )
@@ -34,6 +58,8 @@ def main():
     with_contexts = []
     if 'contexts' in mod.params:
         with_contexts = mod.params['contexts'].split(',')
+
+    extra_fields = parse_extra_fields(mod.params.get('extra_fields', ''))
 
     users_dir = None
     if 'users_dir' in mod.params:
@@ -80,6 +106,12 @@ def main():
             pw_h = open("%s/password" % dirname, 'r')
             user['pass'] = pw_h.read().strip()
             pw_h.close()
+
+        for src, dest in extra_fields:
+            if src in files:
+                with open("%s/%s" % (dirname, src), 'r') as fh:
+                    user[dest] = fh.read().strip()
+
         if 'authorized_keys' in files:
             key_h = open("%s/authorized_keys" % dirname, 'r')
             user['ssh_keys'] = key_h.read().split('\n')
