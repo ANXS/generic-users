@@ -1,16 +1,27 @@
-# file: generic-users/meta/main.yml
-
+---
 galaxy_info:
-  author: pjan vandaele
+  role_name: generic_users
+  namespace: anxs
+  author: ANXS Contributors
   company: ANXS
-  description: Manage users
-  min_ansible_version: 2.3.2
+  description: Manage local groups, users, and authorized SSH keys
+  min_ansible_version: "2.12"
   license: MIT
   platforms:
-  - name: Ubuntu
-    versions:
-    - all
-  categories:
-  - system
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bookworm
+        - trixie
+  galaxy_tags:
+    - system
+    - users
+    - accounts
+    - ssh
+    - security
 
 dependencies: []

@@ -1,0 +1,116 @@
+---
+- name: Prepare
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    genericusers_prepare_users:
+      - gu_default
+      - gu_global
+      - gu_override_additive
+      - gu_override_exclusive
+      - gu_empty
+      - gu_tombstone
+      - gu_conflict
+      - gu_fact
+  tasks:
+    - name: Install SSH key tooling
+      ansible.builtin.apt:
+        name: openssh-client
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Create shared test group
+      ansible.builtin.group:
+        name: genericusers_test
+        state: present
+
+    - name: Create prior supplementary group
+      ansible.builtin.group:
+        name: genericusers_prior
+        state: present
+
+    - name: Create users that predate role convergence
+      ansible.builtin.user:
+        name: "{{ item }}"
+        group: genericusers_test
+        groups: "{{ ['genericusers_prior'] if item == 'gu_default' else omit }}"
+        create_home: true
+        state: present
+      loop: "{{ genericusers_prepare_users }}"
+
+    - name: Create group that the role must remove
+      ansible.builtin.group:
+        name: genericusers_remove
+        state: present
+
+    - name: Create user that the role must remove
+      ansible.builtin.user:
+        name: gu_remove
+        group: genericusers_remove
+        create_home: true
+        state: present
+
+    - name: Create test key directory
+      ansible.builtin.file:
+        path: /tmp/generic-users-test-keys
+        state: directory
+        mode: "0700"
+
+    - name: Generate deterministic test key identities
+      ansible.builtin.command:
+        argv:
+          - ssh-keygen
+          - -q
+          - -t
+          - ed25519
+          - -N
+          - ""
+          - -C
+          - "{{ item }}"
+          - -f
+          - "/tmp/generic-users-test-keys/{{ item }}"
+        creates: "/tmp/generic-users-test-keys/{{ item }}"
+      loop:
+        - desired-one
+        - desired-two
+        - unmanaged
+        - retired
+
+    - name: Read generated public keys
+      ansible.builtin.slurp:
+        src: "/tmp/generic-users-test-keys/{{ item }}.pub"
+      loop:
+        - desired-one
+        - desired-two
+        - unmanaged
+        - retired
+      register: genericusers_prepared_key_files
+
+    - name: Build test key mapping
+      ansible.builtin.set_fact:
+        genericusers_test_keys: >-
+          {{
+            genericusers_test_keys | default({})
+            | combine({item.item: item.content | b64decode | trim})
+          }}
+      loop: "{{ genericusers_prepared_key_files.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Seed unmanaged keys before role convergence
+      ansible.posix.authorized_key:
+        user: "{{ item }}"
+        key: "{{ genericusers_test_keys['unmanaged'] }}"
+        state: present
+      loop: "{{ genericusers_prepare_users }}"
+
+    - name: Seed keys that explicit tombstones must remove
+      ansible.posix.authorized_key:
+        user: "{{ item }}"
+        key: "{{ genericusers_test_keys['retired'] }}"
+        state: present
+      loop:
+        - gu_tombstone
+        - gu_conflict

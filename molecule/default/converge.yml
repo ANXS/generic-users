@@ -1,0 +1,130 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Read generated public keys
+      ansible.builtin.slurp:
+        src: "/tmp/generic-users-test-keys/{{ item }}.pub"
+      loop:
+        - desired-one
+        - desired-two
+        - unmanaged
+        - retired
+      register: genericusers_key_files
+
+    - name: Build test key mapping
+      ansible.builtin.set_fact:
+        genericusers_test_keys: >-
+          {{
+            genericusers_test_keys | default({})
+            | combine({item.item: item.content | b64decode | trim})
+          }}
+      loop: "{{ genericusers_key_files.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Exercise default additive behavior and removals
+      ansible.builtin.include_role:
+        name: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
+      vars:
+        genericusers_groups:
+          - name: genericusers_created
+            gid: 22000
+          - name: genericusers_default_gid
+        genericusers_users:
+          - name: gu_default
+            uid: 22001
+            group: genericusers_test
+            groups:
+              - genericusers_created
+            append: false
+            comment: Generic Users default
+            shell: /bin/bash
+            home: /home/gu_default
+            ssh_keys:
+              - "{{ genericusers_test_keys['desired-one'] }}"
+          - name: gu_tombstone
+            group: genericusers_test
+            ssh_keys: []
+          - name: gu_conflict
+            group: genericusers_test
+            ssh_keys:
+              - "{{ genericusers_test_keys['desired-one'] }}"
+        genericusers_keys_removed:
+          - user: gu_tombstone
+            key: "{{ genericusers_test_keys['retired'] }}"
+          - user: gu_conflict
+            key: "{{ genericusers_test_keys['desired-one'] }}"
+        genericusers_users_removed:
+          - name: gu_remove
+        genericusers_groups_removed:
+          - name: genericusers_remove
+
+    - name: Exercise role-wide and per-user exclusive behavior
+      ansible.builtin.include_role:
+        name: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
+      vars:
+        genericusers_ssh_keys_exclusive: true
+        genericusers_users:
+          - name: gu_global
+            group: genericusers_test
+            ssh_keys:
+              - "{{ genericusers_test_keys['desired-one'] }}"
+              - "{{ genericusers_test_keys['desired-two'] }}"
+          - name: gu_override_additive
+            group: genericusers_test
+            ssh_keys_exclusive: false
+            ssh_keys:
+              - "{{ genericusers_test_keys['desired-one'] }}"
+          - name: gu_override_exclusive
+            group: genericusers_test
+            ssh_keys_exclusive: true
+            ssh_keys:
+              - "{{ genericusers_test_keys['desired-one'] }}"
+              - "{{ genericusers_test_keys['desired-two'] }}"
+          - name: gu_empty
+            group: genericusers_test
+            ssh_keys_exclusive: true
+            ssh_keys: []
+
+    - name: Load fixture users through the custom YAML module
+      users_from_yaml:
+        users_dir: >-
+          {{
+            lookup('env', 'MOLECULE_PROJECT_DIRECTORY')
+          }}/molecule/default/fixtures/users
+        contexts: test
+        extra_fields: api_token
+      delegate_to: localhost
+      become: false
+      register: genericusers_yaml_result
+
+    - name: Verify YAML loader facts
+      ansible.builtin.assert:
+        that:
+          - genericusers_yaml_result.ansible_facts.genericusers_users | length == 1
+          - genericusers_yaml_result.ansible_facts.genericusers_users_removed | length == 1
+          - genericusers_yaml_result.ansible_facts.genericusers_keys_removed | length == 1
+          - genericusers_yaml_result.ansible_facts.genericusers_users[0].name == 'active'
+          - genericusers_yaml_result.ansible_facts.genericusers_users[0].ssh_keys | length == 1
+          - genericusers_yaml_result.ansible_facts.genericusers_users[0].ssh_keys_exclusive
+          - genericusers_yaml_result.ansible_facts.genericusers_users[0].api_token == 'fixture-token'
+          - genericusers_yaml_result.ansible_facts.genericusers_keys_removed[0].user == 'active'
+
+    - name: Set fact-based role inputs
+      ansible.builtin.set_fact:
+        cacheable: true
+        genericusers_users:
+          - name: gu_fact
+            group: genericusers_test
+            ssh_keys_exclusive: true
+            ssh_keys:
+              - "{{ genericusers_test_keys['desired-two'] }}"
+        genericusers_users_removed: []
+        genericusers_keys_removed: []
+
+    - name: Exercise role inputs from ansible_facts
+      ansible.builtin.include_role:
+        name: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"

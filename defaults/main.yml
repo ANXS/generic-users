@@ -1,7 +1,12 @@
-# file: generic-users/defaults/main.yml
-
+---
 genericusers_groups: []
 genericusers_users: []
 
+# Preserve unrelated authorized keys unless the role or user opts into an exact set.
+genericusers_ssh_keys_exclusive: false
+
 genericusers_groups_removed: []
 genericusers_users_removed: []
+
+# Explicit tombstones remain separate from absence in the managed key list.
+genericusers_keys_removed: []

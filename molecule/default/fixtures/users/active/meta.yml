@@ -1,0 +1,7 @@
+---
+comment: Active fixture user
+contexts:
+  - test
+groups:
+  - genericusers_created
+ssh_keys_exclusive: true

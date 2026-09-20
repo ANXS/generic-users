@@ -1,0 +1,16 @@
+# Ansible and role testing
+ansible>=8.0.0,<12
+ansible-lint>=6.22.0
+molecule>=25.9.0
+molecule-plugins[docker]>=23.5.0
+
+# Controller-side custom modules
+hvac>=2.1.0
+
+# Python and infrastructure assertions
+pytest>=7.4.0
+pytest-testinfra>=10.2.0
+
+# Quality and Docker support
+yamllint>=1.35.0
+docker>=6.1.0

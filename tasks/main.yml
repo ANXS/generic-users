@@ -1,15 +1,17 @@
 ---
-- name: "Make sure all groups are present"
-  group:
+- name: Ensure groups are present
+  ansible.builtin.group:
     name: "{{ item.name }}"
     system: "{{ item.system | default(omit) }}"
     gid: "{{ item.gid | default(omit) }}"
-    state: "present"
-  no_log: "{{not anxs_debug|default(False)}}"
-  with_items: "{{ genericusers_groups }}"
+    state: present
+  no_log: "{{ not (anxs_debug | default(false) | bool) }}"
+  loop: "{{ genericusers_groups }}"
+  loop_control:
+    label: "{{ item.name }}"
 
-- name: "Make sure the users are present"
-  user:
+- name: Ensure users are present
+  ansible.builtin.user:
     name: "{{ item.name }}"
     group: "{{ item.group | default(omit) }}"
     groups: "{{ item.groups | join(',') if item.groups is defined else omit }}"
@@ -20,30 +22,111 @@
     uid: "{{ item.uid | default(omit) }}"
     home: "{{ item.home | default(omit) }}"
     system: "{{ item.system | default(omit) }}"
-    state: "present"
-  no_log: "{{not anxs_debug|default(False)}}"
-  with_items: "{{ ansible_facts['genericusers_users'] | default(genericusers_users) }}"
+    state: present
+  no_log: "{{ not (anxs_debug | default(false) | bool) }}"
+  loop: "{{ ansible_facts['genericusers_users'] | default(genericusers_users) }}"
+  loop_control:
+    label: "{{ item.name }}"
 
-- name: "Install the ssh keys for the users"
-  authorized_key:
-    user: "{{item.0.name}}"
-    key: "{{item.1}}"
-  no_log: "{{not anxs_debug|default(False)}}"
-  with_subelements:
-    - "{{ ansible_facts['genericusers_users'] | default(genericusers_users) }}"
-    - ssh_keys
+- name: Install managed SSH keys
+  ansible.posix.authorized_key:
+    user: "{{ item.name }}"
+    key: "{{ genericusers_effective_keys | join('\n') }}"
+    state: present
+    exclusive: >-
+      {{
+        item.ssh_keys_exclusive
+        | default(genericusers_ssh_keys_exclusive)
+        | bool
+      }}
+  vars:
+    genericusers_retired_keys: >-
+      {{
+        ansible_facts['genericusers_keys_removed']
+        | default(genericusers_keys_removed)
+        | selectattr('user', 'equalto', item.name)
+        | map(attribute='key')
+        | list
+      }}
+    genericusers_effective_keys: >-
+      {{
+        item.ssh_keys
+        | default([])
+        | reject('in', genericusers_retired_keys)
+        | list
+      }}
+  no_log: "{{ not (anxs_debug | default(false) | bool) }}"
+  loop: "{{ ansible_facts['genericusers_users'] | default(genericusers_users) }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: genericusers_effective_keys | length > 0
 
-- name: "Make sure all removed users are not present"
-  user:
-    name: "{{item.name}}"
-    state: "absent"
-    remove: true
-  no_log: "{{not anxs_debug|default(False)}}"
-  with_items: "{{ ansible_facts['genericusers_users_removed'] | default(genericusers_users_removed) }}"
+- name: Clear SSH keys for exclusive users with an empty managed set
+  ansible.builtin.file:
+    path: >-
+      {{
+        item.home | default('/home/' ~ item.name)
+      }}/.ssh/authorized_keys
+    state: absent
+  vars:
+    genericusers_retired_keys: >-
+      {{
+        ansible_facts['genericusers_keys_removed']
+        | default(genericusers_keys_removed)
+        | selectattr('user', 'equalto', item.name)
+        | map(attribute='key')
+        | list
+      }}
+    genericusers_effective_keys: >-
+      {{
+        item.ssh_keys
+        | default([])
+        | reject('in', genericusers_retired_keys)
+        | list
+      }}
+  no_log: "{{ not (anxs_debug | default(false) | bool) }}"
+  loop: "{{ ansible_facts['genericusers_users'] | default(genericusers_users) }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - genericusers_effective_keys | length == 0
+    - item.ssh_keys_exclusive
+      | default(genericusers_ssh_keys_exclusive)
+      | bool
 
-- name: "Make sure all removed groups are not present"
-  group:
+- name: Remove explicitly retired SSH keys
+  ansible.posix.authorized_key:
+    user: "{{ item.user }}"
+    key: "{{ item.key }}"
+    state: absent
+  no_log: "{{ not (anxs_debug | default(false) | bool) }}"
+  loop: >-
+    {{
+      ansible_facts['genericusers_keys_removed']
+      | default(genericusers_keys_removed)
+    }}
+  loop_control:
+    label: "{{ item.user }}"
+
+- name: Ensure removed users are absent
+  ansible.builtin.user:
     name: "{{ item.name }}"
-    state: "absent"
-  no_log: "{{not anxs_debug|default(False)}}"
-  with_items: '{{ genericusers_groups_removed }}'
+    state: absent
+    remove: true
+  no_log: "{{ not (anxs_debug | default(false) | bool) }}"
+  loop: >-
+    {{
+      ansible_facts['genericusers_users_removed']
+      | default(genericusers_users_removed)
+    }}
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Ensure removed groups are absent
+  ansible.builtin.group:
+    name: "{{ item.name }}"
+    state: absent
+  no_log: "{{ not (anxs_debug | default(false) | bool) }}"
+  loop: "{{ genericusers_groups_removed }}"
+  loop_control:
+    label: "{{ item.name }}"
